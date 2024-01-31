@@ -101,11 +101,11 @@ func getAvailableTimeCodes(config *models.Config) {
 
 func enterTime(user *models.User, config *models.Config) {
 
-	readInput("Enter Details") // FIX THIS IT SKIPS OVER FIRST PROMPT
-
-	date := readInput("Enter Date, Format:")
-	serviceID := readInput("Enter Service ID:")
-	notes := readInput("Enter Notes:")
+	//readInput("Enter Details") // FIX THIS IT SKIPS OVER FIRST PROMPT
+	fmt.Printf("Endpoint")
+	date := readStringInput("Enter Date, Format:")
+	serviceID := readStringInput("Enter Service ID:")
+	notes := readStringInput("Enter Notes:")
 	time := readFloatInput("Enter Time in hours, part hours OK e.g 1.5:")
 
 	//baseURL +
@@ -194,8 +194,8 @@ func saveConfig(config models.Config) error {
 	return nil
 }
 
-func readInput(prompt string) string {
-	fmt.Println(prompt)
+func readStringInput(prompt string) string {
+	fmt.Print(prompt + " ")
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
@@ -213,10 +213,10 @@ func readFloatInput(prompt string) float64 {
 		fmt.Println("Error reading input:", err)
 		os.Exit(1)
 	}
-	time, err := strconv.ParseFloat(input, 64)
+	value, err := strconv.ParseFloat(input, 64)
 	if err != nil {
 		fmt.Println("Error converting input to float:", err)
 		os.Exit(1)
 	}
-	return time
+	return value
 }
