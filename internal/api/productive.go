@@ -8,10 +8,21 @@ import (
 	"productive-go-client/internal/models"
 )
 
+var (
+	baseURL = "https://api.productive.io/api/v2/"
+)
+
 var client = http.Client{}
 
-func GetUser(endpoint string, headers map[string]string) (models.User, error) {
-	// Create a new HTTP client
+func GetUser(config models.Config) (models.User, error) {
+
+	endpoint := baseURL + "people?filter[email]=" + fmt.Sprintf("%s", config.UserEmail)
+
+	headers := map[string]string{
+		"Content-Type":      "application/vnd.api+json",
+		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
+		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
+	}
 
 	// Create a new GET request
 	req, err := http.NewRequest("GET", endpoint, nil)
@@ -49,8 +60,13 @@ type PersonResponse struct {
 	Data []models.User `json:"data"`
 }
 
-func GetServiceAssignments(endpoint string, headers map[string]string) ([]models.ServiceAssignment, error) {
-	// Create a new HTTP client
+func GetServiceAssignments(config models.Config) ([]models.ServiceAssignment, error) {
+	endpoint := baseURL + "services"
+	headers := map[string]string{
+		"Content-Type":      "application/vnd.api+json",
+		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
+		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
+	}
 
 	// Create a new GET request
 	req, err := http.NewRequest("GET", endpoint, nil)
@@ -88,8 +104,15 @@ type ServiceResponse struct {
 	Data []models.ServiceAssignment `json:"data"`
 }
 
-func PostTimeEntry(url string, headers map[string]string, serviceId, dateInput, userId, notes string, time float64) error {
+func PostTimeEntry(config models.Config, serviceId, dateInput, userId, notes string, time int) error {
+
+	endpoint := baseURL + "/time_entries"
 	// Create JSON request body
+	headers := map[string]string{
+		"Content-Type":      "application/vnd.api+json",
+		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
+		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
+	}
 
 	requestBody := map[string]interface{}{
 		"data": map[string]interface{}{
@@ -97,7 +120,7 @@ func PostTimeEntry(url string, headers map[string]string, serviceId, dateInput, 
 			"attributes": map[string]interface{}{
 				"note": notes,
 				"date": dateInput,
-				"time": (time * 60),
+				"time": time,
 			},
 			"relationships": map[string]interface{}{
 				"person": map[string]interface{}{
@@ -129,7 +152,7 @@ func PostTimeEntry(url string, headers map[string]string, serviceId, dateInput, 
 	fmt.Println("Request Body:", requestBodyString)
 
 	// Send POST request with JSON body
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBodyBytes))
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
 		return err
 	}

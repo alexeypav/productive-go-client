@@ -1,18 +1,18 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"time"
+
 	"productive-go-client/internal/api"
 	"productive-go-client/internal/models"
-	"strconv"
-	"strings"
-)
 
-var (
-	baseURL = "https://api.productive.io/api/v2/"
+	"github.com/cqroot/prompt"
+	"github.com/cqroot/prompt/input"
 )
 
 func main() {
@@ -26,14 +26,7 @@ func main() {
 		return
 	}
 
-	endpoint := baseURL + "people?filter[email]=" + fmt.Sprintf("%s", config.UserEmail)
-	headers := map[string]string{
-		"Content-Type":      "application/vnd.api+json",
-		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
-		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
-	}
-
-	user, err := api.GetUser(endpoint, headers)
+	user, err := api.GetUser(config)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -48,29 +41,28 @@ func main() {
 	fmt.Printf("Title: %s\n", user.Attributes.Title)
 	fmt.Println("----------------------------------")
 
-	for {
-		fmt.Println("Select an option:")
-		fmt.Println("1. Get Time Codes")
-		fmt.Println("2. Enter Time")
-		fmt.Println("3. Option 3")
-		fmt.Println("4. Exit")
+	config.UserId = user.ID
+	err = saveConfig(&config)
+	if err != nil {
+		fmt.Println("Failed to update user ID:", err)
+		return
+	}
 
-		var choice int
-		fmt.Print("Enter your choice: ")
-		_, err := fmt.Scan(&choice)
-		if err != nil {
-			fmt.Println("Error reading input:", err)
-			continue
-		}
+	for {
+		//Display Menu loop
+		choice, err := prompt.New().Ask("Choose:").
+			Choose([]string{"Enter Time", "Show Time Codes", "Exit"})
+		checkErr(err)
 
 		switch choice {
-		case 1:
-			getAvailableTimeCodes(&config)
-		case 2:
+		case "Enter Time":
 			enterTime(&user, &config)
-		case 3:
-			fmt.Println("You selected Option 3")
-		case 4:
+		case "Show Time Codes":
+			availableTimeCodes, err := api.GetServiceAssignments(config)
+			checkErr(err)
+			printList(availableTimeCodes)
+
+		case "Exit":
 			fmt.Println("Exiting...")
 			return
 		default:
@@ -79,48 +71,57 @@ func main() {
 	}
 }
 
-func getAvailableTimeCodes(config *models.Config) {
-
-	endpoint := baseURL + "services"
-	headers := map[string]string{
-		"Content-Type":      "application/vnd.api+json",
-		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
-		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
-	}
-
-	availableTimeCodes, err := api.GetServiceAssignments(endpoint, headers)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-
-	for _, assignment := range availableTimeCodes {
-		fmt.Printf("ID: %s, Name: %s\n", assignment.ID, assignment.Attributes.FirstName)
-	}
-}
-
 func enterTime(user *models.User, config *models.Config) {
 
-	//readInput("Enter Details") // FIX THIS IT SKIPS OVER FIRST PROMPT
-	fmt.Printf("Endpoint")
-	date := readStringInput("Enter Date, Format:")
-	serviceID := readStringInput("Enter Service ID:")
-	notes := readStringInput("Enter Notes:")
-	time := readFloatInput("Enter Time in hours, part hours OK e.g 1.5:")
+	//Date
+	today := time.Now().Format("2006-01-02")
+	date, err := prompt.New().Ask("Enter date:").Input(today)
+	checkErr(err)
 
-	//baseURL +
-	endpoint := baseURL + "/time_entries"
-	headers := map[string]string{
-		"Content-Type":      "application/vnd.api+json",
-		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
-		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
-	}
-
-	fmt.Printf("Endpoint: %s, Headers: %s, ServiceID: %s, Date: %s, UserID: %s, Notes: %s, Time: %f\n", endpoint, "headers", serviceID, date, user.ID, "", time)
-
-	err := api.PostTimeEntry(endpoint, headers, serviceID, date, user.ID, notes, time)
+	//Time code
+	availableTimeCodes, err := api.GetServiceAssignments(*config)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Printf("Unable to save the customers to a file: %s", err.Error())
+		return
+	}
+	availableTimeCodesString, err := structListToStringList(availableTimeCodes)
+	if err != nil {
+		fmt.Printf("Unable to save the customers to a file: %s", err.Error())
+		return
+	}
+	printList(availableTimeCodes)
+	serviceAssignment, err := prompt.New().Ask("Choose:").
+		Choose(availableTimeCodesString)
+	checkErr(err)
+	fmt.Print(serviceAssignment)
+	serviceID, err := prompt.New().Ask("Enter Time Code ID:").
+		Input("", input.WithInputMode(input.InputInteger))
+	checkErr(err)
+
+	//Notes
+	notes, err := prompt.New().Ask("Enter any notes:").Input("")
+	checkErr(err)
+
+	//Hours
+	timeH, err := prompt.New().Ask("Enter Time (Hours):").Input("0", input.WithInputMode(input.InputInteger))
+	checkErr(err)
+	timeHours, err := strconv.Atoi(timeH)
+	checkErr(err)
+
+	//Minutes
+	timeM, err := prompt.New().Ask("Enter Time (Minutes):").Input("0", input.WithInputMode(input.InputInteger))
+	checkErr(err)
+	timeMinutes, err := strconv.Atoi(timeM)
+	checkErr(err)
+
+	timeMinutes = timeMinutes + timeHours*60
+
+	//Selection result
+	fmt.Printf(" ServiceID: %v, Date: %s, UserID: %s, Notes: %s, Time: %v\n", serviceID, date, user.ID, notes, timeMinutes)
+
+	_, err = fmt.Println("Done") //api.PostTimeEntry(*config, serviceAssignment.Service_ID, date, user.ID, notes, timeMinutes)
+	if err != nil {
+		fmt.Println("Error posting time entry:", err)
 		return
 	}
 
@@ -160,7 +161,7 @@ func getConfig(config *models.Config) error {
 		config.CompanyId = companyID
 
 		// Save the config struct to the config file
-		err = saveConfig(*config)
+		err = saveConfig(config)
 		if err != nil {
 			return err
 		}
@@ -180,7 +181,7 @@ func getConfig(config *models.Config) error {
 	return nil
 }
 
-func saveConfig(config models.Config) error {
+func saveConfig(config *models.Config) error {
 	file, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
@@ -194,29 +195,43 @@ func saveConfig(config models.Config) error {
 	return nil
 }
 
-func readStringInput(prompt string) string {
-	fmt.Print(prompt + " ")
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Error reading input:", err)
-		os.Exit(1)
+func getServiceAssignmentByID(serviceAssignments []models.ServiceAssignment, id string) models.ServiceAssignment {
+	for _, sa := range serviceAssignments {
+		if sa.Service_ID == id {
+			return sa
+		}
 	}
-	return strings.TrimSpace(input)
+	return models.ServiceAssignment{}
 }
 
-func readFloatInput(prompt string) float64 {
-	fmt.Println(prompt)
-	var input string
-	_, err := fmt.Scanln(&input)
+func checkErr(err error) {
 	if err != nil {
-		fmt.Println("Error reading input:", err)
-		os.Exit(1)
+		if errors.Is(err, prompt.ErrUserQuit) {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			os.Exit(1)
+		} else {
+			panic(err)
+		}
 	}
-	value, err := strconv.ParseFloat(input, 64)
-	if err != nil {
-		fmt.Println("Error converting input to float:", err)
-		os.Exit(1)
+}
+
+func printList[T any](list []T) {
+	fmt.Println("----------------------------------")
+	for _, item := range list {
+		fmt.Println(item)
 	}
-	return value
+	fmt.Println("----------------------------------")
+}
+
+// For the prompt choose menu if chosing from a slice of structs
+func structListToStringList[T any](structList []T) ([]string, error) {
+	var stringList []string
+	for _, sl := range structList {
+		jsonBytes, err := json.Marshal(sl)
+		if err != nil {
+			return stringList, err
+		}
+		stringList = append(stringList, string(jsonBytes))
+	}
+	return stringList, nil
 }
