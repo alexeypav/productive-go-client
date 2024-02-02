@@ -71,36 +71,41 @@ func main() {
 	}
 }
 
-func enterTime(user *models.User, config *models.Config) {
+func enterTime(user *models.User, config *models.Config) error {
 
-	//Date
-	today := time.Now().Format("2006-01-02")
-	date, err := prompt.New().Ask("Enter date:").Input(today)
-	checkErr(err)
-
-	//Time code
+	//Get available time codes, convert to []string for the choose prompt
 	availableTimeCodes, err := api.GetServiceAssignments(*config)
 	if err != nil {
 		fmt.Printf("Unable to save the customers to a file: %s", err.Error())
-		return
+		return err
 	}
 	availableTimeCodesString, err := structListToStringList(availableTimeCodes)
 	if err != nil {
 		fmt.Printf("Unable to save the customers to a file: %s", err.Error())
-		return
+		return err
 	}
-	printList(availableTimeCodes)
-	serviceAssignment, err := prompt.New().Ask("Choose:").
-		Choose(availableTimeCodesString)
-	checkErr(err)
-	fmt.Print(serviceAssignment)
-	serviceID, err := prompt.New().Ask("Enter Time Code ID:").
-		Input("", input.WithInputMode(input.InputInteger))
+
+	timeEntry := models.NewTimeEntry()
+	fmt.Printf("%+v\n", timeEntry)
+
+	//Date
+	today := time.Now().Format("2006-01-02")
+	timeEntry.Attributes.Date, err = prompt.New().Ask("Enter Date:").Input(today)
 	checkErr(err)
 
-	//Notes
-	notes, err := prompt.New().Ask("Enter any notes:").Input("")
+	//Time Code
+	serviceAssignmentString, err := prompt.New().Ask("Choose Time Code:").
+		Choose(availableTimeCodesString)
 	checkErr(err)
+	//Back to struct to extract and use the ID
+	var serviceAssignment models.ServiceAssignment
+	err = json.Unmarshal([]byte(serviceAssignmentString), &serviceAssignment)
+	timeEntry.Relationships.Service.Data.ID = serviceAssignment.Service_ID
+
+	//Notes
+	notes, err := prompt.New().Ask("Enter Notes for Time Entry:").Input("")
+	checkErr(err)
+	timeEntry.Attributes.Note = notes
 
 	//Hours
 	timeH, err := prompt.New().Ask("Enter Time (Hours):").Input("0", input.WithInputMode(input.InputInteger))
@@ -114,16 +119,22 @@ func enterTime(user *models.User, config *models.Config) {
 	timeMinutes, err := strconv.Atoi(timeM)
 	checkErr(err)
 
-	timeMinutes = timeMinutes + timeHours*60
+	timeEntry.Attributes.Time = timeMinutes + timeHours*60
+
+	//Set User
+	timeEntry.Relationships.Person.Data.ID = user.ID
 
 	//Selection result
-	fmt.Printf(" ServiceID: %v, Date: %s, UserID: %s, Notes: %s, Time: %v\n", serviceID, date, user.ID, notes, timeMinutes)
-
-	_, err = fmt.Println("Done") //api.PostTimeEntry(*config, serviceAssignment.Service_ID, date, user.ID, notes, timeMinutes)
+	fmt.Printf("%v \n", timeEntry)
+	err = api.PostTimeEntry(*config, timeEntry)
 	if err != nil {
 		fmt.Println("Error posting time entry:", err)
-		return
+		return err
 	}
+
+	fmt.Println("Time Entered") //
+
+	return nil
 
 }
 
@@ -215,6 +226,7 @@ func checkErr(err error) {
 	}
 }
 
+// Print struct to screen for display, user, config etc.
 func printList[T any](list []T) {
 	fmt.Println("----------------------------------")
 	for _, item := range list {

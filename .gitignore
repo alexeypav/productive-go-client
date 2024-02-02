@@ -1,3 +1,4 @@
 config.json
 .vscode/launch.json
 api.txt
+.DS_Store

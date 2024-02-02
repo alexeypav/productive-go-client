@@ -104,7 +104,7 @@ type ServiceResponse struct {
 	Data []models.ServiceAssignment `json:"data"`
 }
 
-func PostTimeEntry(config models.Config, serviceId, dateInput, userId, notes string, time int) error {
+func PostTimeEntry(config models.Config, timeEntry models.TimeEntry) error {
 
 	endpoint := baseURL + "/time_entries"
 	// Create JSON request body
@@ -115,28 +115,7 @@ func PostTimeEntry(config models.Config, serviceId, dateInput, userId, notes str
 	}
 
 	requestBody := map[string]interface{}{
-		"data": map[string]interface{}{
-			"type": "time_entries",
-			"attributes": map[string]interface{}{
-				"note": notes,
-				"date": dateInput,
-				"time": time,
-			},
-			"relationships": map[string]interface{}{
-				"person": map[string]interface{}{
-					"data": map[string]interface{}{
-						"type": "people",
-						"id":   userId,
-					},
-				},
-				"service": map[string]interface{}{
-					"data": map[string]interface{}{
-						"type": "services",
-						"id":   serviceId,
-					},
-				},
-			},
-		},
+		"data": timeEntry,
 	}
 
 	// Convert request body to JSON
