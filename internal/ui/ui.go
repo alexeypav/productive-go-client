@@ -15,18 +15,20 @@ import (
 
 func EnterTime(user *models.User, timeService *service.TimeService, config *models.Config) error {
 
+	// Get available time codes
 	availableTimeCodes, err := timeService.GetServiceAssignments(*config)
 	if err != nil {
 		fmt.Printf("Error fetching available time codes: %s\n", err.Error())
 		return err
 	}
-
-	// Convert to []string for the choose prompt
+	// Convert to []string for the ui choose prompt
 	availableTimeCodesString, err := util.StructListToStringList(availableTimeCodes)
 	if err != nil {
 		fmt.Printf("Error converting time codes to string list: %s\n", err.Error())
 		return err
 	}
+
+	//Start prompts
 
 	//Date
 	today := time.Now().Format("2006-01-02")
@@ -41,6 +43,8 @@ func EnterTime(user *models.User, timeService *service.TimeService, config *mode
 	if err != nil {
 		return fmt.Errorf("time code: %w", err)
 	}
+
+	//Selected time code back models.ServiceAssignment
 	var serviceAssignment models.ServiceAssignment
 	err = json.Unmarshal([]byte(serviceAssignmentString), &serviceAssignment)
 	if err != nil {
@@ -107,7 +111,7 @@ func DisplayUserDetails(user *models.User) {
 	fmt.Println("----------------------------------")
 }
 
-// Print struct to screen for display, some response, config etc.
+// Print struct to screen for nicer display: some response, config etc.
 func printStruct[T any](list []T) {
 	fmt.Println("----------------------------------")
 	for _, item := range list {
