@@ -2,7 +2,10 @@ module productive-go-client
 
 go 1.21.6
 
-require github.com/cqroot/prompt v0.9.3
+require (
+	github.com/cqroot/prompt v0.9.3
+	github.com/stretchr/testify v1.8.4
+)
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -24,7 +27,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
