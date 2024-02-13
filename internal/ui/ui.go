@@ -14,7 +14,7 @@ import (
 )
 
 func EnterTime(user *models.User, timeService *service.TimeService, config *models.Config) error {
-	// Get available time codes
+
 	availableTimeCodes, err := timeService.GetServiceAssignments(*config)
 	if err != nil {
 		fmt.Printf("Error fetching available time codes: %s\n", err.Error())
@@ -28,32 +28,49 @@ func EnterTime(user *models.User, timeService *service.TimeService, config *mode
 		return err
 	}
 
-	// Prompt user for inputs...
-	// For simplicity, we'll assume you have functions similar to `prompt.New().Ask(...)` for user interaction.
+	//Date
 	today := time.Now().Format("2006-01-02")
 	date, err := prompt.New().Ask("Enter Date:").Input(today)
+	if err != nil {
+		return fmt.Errorf("date: %w", err)
+	}
 
+	//Time Code
 	serviceAssignmentString, err := prompt.New().Ask("Choose Time Code:").
 		Choose(availableTimeCodesString)
+	if err != nil {
+		return fmt.Errorf("time code: %w", err)
+	}
 	var serviceAssignment models.ServiceAssignment
 	err = json.Unmarshal([]byte(serviceAssignmentString), &serviceAssignment)
+	if err != nil {
+		return fmt.Errorf("json unmarshal: %w", err)
+	}
 	serviceAssignmentID := serviceAssignment.Service_ID
 
+	// Notes
 	notes, err := prompt.New().Ask("Enter Notes for Time Entry:").Input("")
-
+	if err != nil {
+		return fmt.Errorf("notes: %w", err)
+	}
 	//Hours
 	timeH, err := prompt.New().Ask("Enter Time (Hours):").Input("0", input.WithInputMode(input.InputInteger))
-	util.CheckErr(err)
+	if err != nil {
+		return fmt.Errorf("time hours: %w", err)
+	}
 	timeHours, err := strconv.Atoi(timeH)
-	util.CheckErr(err)
 
 	//Minutes
 	timeM, err := prompt.New().Ask("Enter Time (Minutes):").Input("0", input.WithInputMode(input.InputInteger))
-	util.CheckErr(err)
+	if err != nil {
+		return fmt.Errorf("time minutes: %w", err)
+	}
 	timeMinutes, err := strconv.Atoi(timeM)
-	util.CheckErr(err)
+	if err != nil {
+		return fmt.Errorf("time minutes: %w", err)
+	}
 
-	// Call business logic layer to process and create time entry
+	//Create time entry
 	err = timeService.EnterTime(user, config, date, serviceAssignmentID, notes, timeHours, timeMinutes)
 	if err != nil {
 		fmt.Println("Error posting time entry:", err)
@@ -64,22 +81,24 @@ func EnterTime(user *models.User, timeService *service.TimeService, config *mode
 	return nil
 }
 
-// Implement promptForDate, promptForServiceAssignment, promptForNotes, and promptForTime as needed.
+func ShowUserTimeCodes(timeService *service.TimeService, config *models.Config) error {
 
+	availableTimeCodes, err := timeService.GetServiceAssignments(*config)
+	if err != nil {
+		fmt.Printf("Error fetching available time codes: %s\n", err.Error())
+		return err
+	}
 
+	printStruct(availableTimeCodes)
 
-// func FetchAndDisplayUser(config models.Config) (models.User, error) {
-// 	user, err := data.GetUser(config)
-// 	if err != nil {
-// 		return models.User{}, err
-// 	}
-// 	displayUserDetails(user)
-// 	return user, nil
-// }
+	return nil
 
-func displayUserDetails(user models.User) {
-	// Print the user details
-	fmt.Println("User:")
+}
+
+func DisplayUserDetails(user *models.User) {
+	// Print the formatted user details
+	fmt.Println("----------------------------------")
+	fmt.Println("User Details")
 	fmt.Printf("ID: %s\n", user.ID)
 	fmt.Printf("First Name: %s\n", user.Attributes.FirstName)
 	fmt.Printf("Last Name: %s\n", user.Attributes.LastName)
@@ -88,8 +107,8 @@ func displayUserDetails(user models.User) {
 	fmt.Println("----------------------------------")
 }
 
-// Print struct to screen for display, user, config etc.
-func PrintList[T any](list []T) {
+// Print struct to screen for display, some response, config etc.
+func printStruct[T any](list []T) {
 	fmt.Println("----------------------------------")
 	for _, item := range list {
 		fmt.Println(item)

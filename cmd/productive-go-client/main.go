@@ -24,8 +24,9 @@ func main() {
 	client := &http.Client{}
 	baseURL := "https://api.productive.io/api/v2/"
 
-	timeEntryRepo := data.NewProductive(client, baseURL)
-	timeService := service.NewTimeService(timeEntryRepo)
+	var productiveService data.ProductiveService
+	productiveService = data.NewProductive(client, baseURL)
+	timeService := service.NewTimeService(productiveService)
 
 	user, err := timeService.Repo.GetUser(cfg)
 	if err != nil {
@@ -33,7 +34,10 @@ func main() {
 		return
 	}
 
-	fmt.Printf("%v \n", user)
+	ui.DisplayUserDetails(&user)
+	if err != nil {
+		fmt.Printf("Error in %s \n", err)
+	}
 
 	if err := config.UpdateConfigWithUserID(&cfg, user.ID); err != nil {
 		fmt.Println("Failed to update user ID:", err)
@@ -49,23 +53,23 @@ func main() {
 
 		switch choice {
 		case "Enter Time":
-			ui.EnterTime(&user, timeService, &cfg)
-		// case "Show Time Codes":
-		// 	handleShowTimeCodes(config)
+			err := ui.EnterTime(&user, timeService, &cfg)
+			if err != nil {
+				fmt.Printf("Error in %s \n", err)
+			}
+
+		case "Show Time Codes":
+			ui.ShowUserTimeCodes(timeService, &cfg)
+			if err != nil {
+				fmt.Printf("Error in %s \n", err)
+			}
+
 		case "Exit":
 			fmt.Println("Exiting...")
 			return
+
 		default:
 			fmt.Println("Invalid choice. Please select a valid option.")
 		}
 	}
 }
-
-// func handleShowTimeCodes(config *models.Config) {
-// 	availableTimeCodes, err := data.GetServiceAssignments(*config)
-// 	if err != nil {
-// 		fmt.Println("Error retrieving time codes:", err)
-// 		return
-// 	}
-// 	ui.PrintList(availableTimeCodes)
-// }

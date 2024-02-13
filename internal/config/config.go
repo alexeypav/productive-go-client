@@ -23,7 +23,7 @@ func getConfig(config *models.Config) error {
 	// Check if the config file exists
 	_, err := os.Stat("config.json")
 	if os.IsNotExist(err) {
-		// Config file does not exist, prompt for access token
+
 		fmt.Print("Enter your access token: ")
 		var accessToken string
 		_, err := fmt.Scan(&accessToken)
@@ -31,7 +31,6 @@ func getConfig(config *models.Config) error {
 			return err
 		}
 
-		// Save the access token to the config struct
 		config.AccessToken = accessToken
 
 		fmt.Print("Enter your company ID: ")
@@ -52,7 +51,7 @@ func getConfig(config *models.Config) error {
 
 		config.CompanyId = companyID
 
-		// Save the config struct to the config file
+		// Save the config to file
 		err = saveConfig(config)
 		if err != nil {
 			return err

@@ -2,13 +2,22 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"productive-go-client/internal/models"
+
+	"github.com/cqroot/prompt"
 )
 
 func CheckErr(err error) {
 	if err != nil {
-		fmt.Println("Error:", err)
+		if errors.Is(err, prompt.ErrUserQuit) {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			os.Exit(1)
+		} else {
+			panic(err)
+		}
 	}
 }
 

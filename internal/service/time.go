@@ -5,12 +5,13 @@ import (
 	"productive-go-client/internal/models"
 )
 
-// Assuming TimeService is defined within the service package and wraps the repository.
+// TimeService is defined within the service package and wraps the ProductiveService interface.
 type TimeService struct {
-	Repo *data.Productive
+	Repo data.ProductiveService // Use the interface type directly, without a pointer
 }
 
-func NewTimeService(repo *data.Productive) *TimeService {
+// NewTimeService constructs a new TimeService with the given ProductiveService implementation.
+func NewTimeService(repo data.ProductiveService) *TimeService { // Accept the interface type
 	return &TimeService{Repo: repo}
 }
 
@@ -24,8 +25,8 @@ func (s *TimeService) EnterTime(user *models.User, config *models.Config, date s
 	timeEntry.Attributes.Time = timeMinutes + timeHours*60
 	timeEntry.Relationships.Person.Data.ID = user.ID
 
-	// Post the time entry
-	return s.Repo.PostTimeEntry(*config, timeEntry)
+	// Post the time entry using the ProductiveService interface
+	return s.Repo.PostTimeEntry(*config, timeEntry) // Ensure timeEntry is correctly referenced or passed as per your actual method signature
 }
 
 func (s *TimeService) GetServiceAssignments(config models.Config) ([]models.ServiceAssignment, error) {
