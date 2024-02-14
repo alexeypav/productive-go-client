@@ -85,6 +85,30 @@ func EnterTime(user *models.User, timeService *service.TimeService, config *mode
 	return nil
 }
 
+func PromptConfigDetails() error {
+	var accessToken, companyID, userEmail string
+
+	fmt.Print("Enter your access token: ")
+	_, err := fmt.Scan(&accessToken)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("Enter your company ID: ")
+	_, err = fmt.Scan(&companyID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("Enter your Email: ")
+	_, err = fmt.Scan(&userEmail)
+	if err != nil {
+		return err
+	}
+
+	return service.UpdateOrCreateConfig(accessToken, companyID, userEmail)
+}
+
 func ShowUserTimeCodes(timeService *service.TimeService, config *models.Config) error {
 
 	availableTimeCodes, err := timeService.GetServiceAssignments(*config)

@@ -19,6 +19,7 @@ func UpdateConfigWithUserID(config *models.Config, userID string) error {
 	return saveConfig(config)
 }
 
+// In Progress, Split and move promts to UI layer
 func getConfig(config *models.Config) error {
 	// Check if the config file exists
 	_, err := os.Stat("config.json")
