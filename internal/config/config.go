@@ -50,7 +50,7 @@ func getConfig(config *models.Config) error {
 			return err
 		}
 
-		config.CompanyId = companyID
+		config.UserEmail = userEmail
 
 		// Save the config to file
 		err = saveConfig(config)
