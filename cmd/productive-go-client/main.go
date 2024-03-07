@@ -64,7 +64,7 @@ func main() {
 		if err != nil {
 			log.Fatal("Failed to create a time entry", err)
 		}
-		log.Print("Successfully entered time for: ", *serviceId, *date)
+		log.Printf("Successfully entered time for: Service ID: %v, Date: %v", *serviceId, *date)
 
 	} else {
 
