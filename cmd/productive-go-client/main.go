@@ -52,7 +52,7 @@ func main() {
 		log.Print("Failed to update user ID:", err)
 	}
 
-	//If flags are passed, handle and run, otherwise show the ui
+	//If flags are passed handle and run, otherwise show the ui
 	if len(os.Args) > 1 {
 		flag.Parse()
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"productive-go-client/internal/data"
 	"productive-go-client/internal/models"
 )
 
@@ -22,7 +23,11 @@ func UpdateConfigWithUserID(config *models.Config, userID string) error {
 // In Progress, Split and move promts to UI layer
 func getConfig(config *models.Config) error {
 	// Check if the config file exists
-	_, err := os.Stat("config.json")
+	configPath, err := data.GetConfigFilePath()
+	if err != nil {
+		return err
+	}
+	_, err = os.Stat(configPath)
 	if os.IsNotExist(err) {
 
 		fmt.Print("Enter your access token: ")
@@ -59,7 +64,7 @@ func getConfig(config *models.Config) error {
 		}
 	} else {
 		// Config file exists, load the config from it
-		file, err := os.ReadFile("config.json")
+		file, err := os.ReadFile(configPath)
 		if err != nil {
 			return err
 		}
@@ -79,7 +84,12 @@ func saveConfig(config *models.Config) error {
 		return err
 	}
 
-	err = os.WriteFile("config.json", file, 0644)
+	configPath, err := data.GetConfigFilePath()
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(configPath, file, 0644)
 	if err != nil {
 		return err
 	}
