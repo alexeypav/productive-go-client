@@ -18,8 +18,8 @@ func GetConfigFilePath() (filePath string, err error) {
 	}
 
 	execDir := filepath.Dir(execPath)
-
-	if strings.Contains(execPath, "/tmp/") || strings.Contains(execPath, `\Temp\`) {
+	//If using go run, use invocation dir for config load/save
+	if strings.Contains(execPath, "/tmp/") || strings.Contains(execPath, `\Temp\`) || strings.Contains(execPath, `/T/`) {
 		fmt.Println("Program detected to be likely run using 'go run', using invocation dir for config file.")
 		filePath = "config.json"
 	} else {
