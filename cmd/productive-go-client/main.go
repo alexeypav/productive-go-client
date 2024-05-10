@@ -17,12 +17,14 @@ import (
 )
 
 var (
+	//Flags for non-interactive execution
 	serviceId = flag.String("serviceId", "", "ID of the service")
 	date      = flag.String("date", time.Now().Format("2006-01-02"), "Date for the operation in YYYY-MM-DD format")
 	hours     = flag.Int("hours", 8, "Hours component of the time")
 	minutes   = flag.Int("minutes", 0, "Minutes component of the time")
 	notes     = flag.String("notes", "", "Notes to add to the time entry")
-	baseURL   = "https://api.productive.io/api/v2/"
+
+	baseURL = "https://api.productive.io/api/v2/"
 )
 
 func main() {
