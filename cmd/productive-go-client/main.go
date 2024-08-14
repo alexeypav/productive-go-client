@@ -71,7 +71,7 @@ func main() {
 	} else {
 
 		for {
-			choice, err := prompt.New().Ask("Choose:").Choose([]string{"Enter Time", "Show Time Codes", "Exit"})
+			choice, err := prompt.New().Ask("Choose:").Choose([]string{"Enter Time", "Show Today's Available Time Codes", "Exit"})
 			if err != nil {
 				fmt.Println("Error:", err)
 			}
@@ -83,7 +83,7 @@ func main() {
 					fmt.Printf("Error in %s \n", err)
 				}
 
-			case "Show Time Codes":
+			case "Show Today's Available Time Codes":
 				ui.ShowUserTimeCodes(timeService, &cfg)
 				if err != nil {
 					fmt.Printf("Error in %s \n", err)

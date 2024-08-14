@@ -18,7 +18,7 @@ func (m *MockProductive) PostTimeEntry(config models.Config, timeEntry models.Ti
 	return args.Error(0)
 }
 
-func (m *MockProductive) GetServiceAssignments(config models.Config) ([]models.ServiceAssignment, error) {
+func (m *MockProductive) GetServiceAssignments(config models.Config, date string) ([]models.ServiceAssignment, error) {
 	args := m.Called(config)
 	return args.Get(0).([]models.ServiceAssignment), args.Error(1)
 }

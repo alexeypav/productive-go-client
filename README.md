@@ -1,6 +1,6 @@
 # GO Client for productive.io - Time Entry
 
-This is an interactive CLI (Command Line Interface) application designed for entering your time into the productive.io platform. 
+This is an interactive CLI (Command Line Interface) application  for entering your time into the productive.io platform. 
 
 ## Getting Started
 
@@ -20,16 +20,16 @@ To get your API token and Company ID follow the instructions here: https://devel
 4. If configuration is present, you can run the client non-interactively using flags
 ```
   -date string
-        Date for the operation in YYYY-MM-DD format (default "2024-05-10")
+        Date for the time entry in YYYY-MM-DD format (default "2024-05-10")
   -hours int
-        Hours component of the time (default 8)
+        Hours component of the time
   -minutes int
         Minutes component of the time
   -notes string
-        Date for the operation in YYYY-MM-DD format
+        Any notes for the time entry (Default = empty)
   -serviceId string
         ID of the service
 ```
 
 ## Other
-- To edit or reset the config, use the config.json file created in the app root directory on first run.
+- To edit or reset the config, edit or delete the config.json file created in the app root directory on first run.
