@@ -15,8 +15,15 @@ import (
 
 func EnterTime(user *models.User, timeService *service.TimeService, config *models.Config) error {
 
+	//Date - used for entry and time code retrieval
+	today := time.Now().Format("2006-01-02")
+	date, err := prompt.New().Ask("Enter Date:").Input(today)
+	if err != nil {
+		return fmt.Errorf("date: %w", err)
+	}
+
 	// Get available time codes
-	availableTimeCodes, err := timeService.GetServiceAssignments(*config)
+	availableTimeCodes, err := timeService.GetServiceAssignments(*config, date)
 	if err != nil {
 		fmt.Printf("Error fetching available time codes: %s\n", err.Error())
 		return err
@@ -26,15 +33,6 @@ func EnterTime(user *models.User, timeService *service.TimeService, config *mode
 	if err != nil {
 		fmt.Printf("Error converting time codes to string list: %s\n", err.Error())
 		return err
-	}
-
-	//Start prompts
-
-	//Date
-	today := time.Now().Format("2006-01-02")
-	date, err := prompt.New().Ask("Enter Date:").Input(today)
-	if err != nil {
-		return fmt.Errorf("date: %w", err)
 	}
 
 	//Time Code
@@ -111,7 +109,9 @@ func PromptConfigDetails() error {
 
 func ShowUserTimeCodes(timeService *service.TimeService, config *models.Config) error {
 
-	availableTimeCodes, err := timeService.GetServiceAssignments(*config)
+	date := time.Now().Format("2006-01-02")
+
+	availableTimeCodes, err := timeService.GetServiceAssignments(*config, date)
 	if err != nil {
 		fmt.Printf("Error fetching available time codes: %s\n", err.Error())
 		return err

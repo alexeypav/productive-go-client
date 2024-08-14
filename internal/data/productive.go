@@ -10,7 +10,7 @@ import (
 
 type ProductiveService interface {
 	PostTimeEntry(config models.Config, timeEntry models.TimeEntry) error
-	GetServiceAssignments(config models.Config) ([]models.ServiceAssignment, error)
+	GetServiceAssignments(config models.Config, date string) ([]models.ServiceAssignment, error)
 	GetUser(config models.Config) (models.User, error)
 }
 
@@ -68,13 +68,15 @@ type PersonResponse struct {
 	Data []models.User `json:"data"`
 }
 
-func (repo *Productive) GetServiceAssignments(config models.Config) ([]models.ServiceAssignment, error) {
-	endpoint := repo.BaseURL + "services"
+func (repo *Productive) GetServiceAssignments(config models.Config, date string) ([]models.ServiceAssignment, error) {
+
+	//Construct time service query url - this can be upated to use the net package to construct the url cleanly, left like this for now as it's easy to understand.
+	endpoint := repo.BaseURL + "services?filter[person_id]=" + config.UserId + "&filter[time_tracking_enabled]=true&filter[after]=" + date + "&filter[before]=" + date
 
 	headers := map[string]string{
 		"Content-Type":      "application/vnd.api+json",
-		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
-		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
+		"X-Auth-Token":      config.AccessToken,
+		"X-Organization-Id": config.CompanyId,
 	}
 
 	req, err := http.NewRequest("GET", endpoint, nil)
@@ -115,8 +117,8 @@ func (repo *Productive) PostTimeEntry(config models.Config, timeEntry models.Tim
 
 	headers := map[string]string{
 		"Content-Type":      "application/vnd.api+json",
-		"X-Auth-Token":      fmt.Sprintf("%s", config.AccessToken),
-		"X-Organization-Id": fmt.Sprintf("%s", config.CompanyId),
+		"X-Auth-Token":      config.AccessToken,
+		"X-Organization-Id": config.CompanyId,
 	}
 
 	requestBody := map[string]interface{}{
