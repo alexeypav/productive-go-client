@@ -32,4 +32,4 @@ To get your API token and Company ID follow the instructions here: https://devel
 ```
 
 ## Other
-- To edit or reset the config, edit or delete the config.json file created in the app root directory on first run.
+- To edit or reset the config, edit or delete the `config.json` file created in the app root directory on first run.
